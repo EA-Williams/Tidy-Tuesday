@@ -38,6 +38,31 @@ simpsons_roles <- mutate(simpsons_roles, roles_this_episode =
   `!` %>%
   rowSums)
 
+# Filter by multiple roles
+simpsons_multi_roles <- filter(simpsons_roles, roles_this_episode > 1)
+
+# Number of unique roles by each person
+
+main_matches %>% filter(loser == "Andy Murray") %>% 
+  group_by(winner) %>% arrange(year) %>%
+  summarise(years  = paste(year, collapse =","), times = length(year))  %>%
+  arrange(desc(times), years)
+
+simpsons2 <- simpsons %>% 
+  group_by(guest_star) %>% arrange(role) %>%
+  summarise(roles = paste(role, collapse = ";", total_roles = length(role))) %>%
+  arrange(desc(total_roles), roles)
+
+simpsons3 <- simpsons %>%
+  group_by(guest_star) %>%
+  summarise(roles = paste(role, collapse = ";"))
+
+simpsons4 <- simpsons_roles %>%
+  group_by(guest_star) %>%
+  summarise_at(c("role_1", "role_2", "role_3", "role_4", "role_5"), n())
+
+
+##THIS PART DOESN'T WORK YET
 # Filter by 'self' guest appearances
 simpsons_self <- filter(simpsons, str_detect(role, "self"))
 
