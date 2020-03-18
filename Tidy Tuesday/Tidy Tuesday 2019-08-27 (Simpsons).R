@@ -18,8 +18,8 @@ simpsons <-
   )
 
 # Add Episode column
-simpsons <-
-  mutate(simpsons, episode_number = str_sub(number, -2)) %>%
+simpsons <- simpsons %>%
+  mutate(episode_number = str_sub(number, -2)) %>%
   select(1, episode_number, everything()) # move it to the second column
 
 # Separate the 'roles' column into separate columns for each role
@@ -29,14 +29,15 @@ simpsons_roles <-
     role,
     into = c("role_1", "role_2", "role_3", "role_4", "role_5"),
     sep = ";"
-  )
+  ) #There will be a warning here
 
 # New column for 'roles this episode'
-simpsons_roles <- mutate(simpsons_roles, roles_this_episode =
+simpsons_roles <- simpsons_roles %>%
+  mutate(roles_this_episode =
   select(simpsons_roles, starts_with("role_")) %>%
   is.na %>%
   `!` %>%
-  rowSums)
+  rowSums())
 
 # Filter by multiple roles
 simpsons_multi_roles <- filter(simpsons_roles, roles_this_episode > 1)
@@ -81,6 +82,14 @@ ggplot(data = simpsons_self) +
 #
 
 
+
+
+#from Tony Galvan, https://github.com/gdatascience/tidytuesday/blob/master/simpsons.Rmd
+
+roles <- simpsons %>%
+  unnest(role = strsplit(role, ";")) %>%
+  mutate(role_name = if_else(role %in% c("Himself", "Herself", "Themselves"), guest_star, role))
+glimpse(roles)
 
 
 
