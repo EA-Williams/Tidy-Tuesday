@@ -1,6 +1,7 @@
-library(tidyverse)
-library(lubridate)
-library(viridis)
+library(tidyverse) # for wrangling
+library(lubridate) # for broadcast days / times
+library(viridis) # colour palette
+library(gridExtra) # for the first plot
 
 # load the tidy and raw data
 #tidy_anime <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-04-23/tidy_anime.csv")
@@ -45,7 +46,7 @@ raw_df <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tid
     # group by day and hour
     group_by(bc_day_num, bc_hour) %>%
     # calculate the mean score for each day and hour combination
-    summarise("dh_score" = mean(score)) %>% # day-hour-score
+    mutate("dh_score" = mean(score)) %>% # day-hour-score
     ungroup()
   
   # create a theme for the upcoming plot
@@ -61,7 +62,8 @@ raw_df <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tid
     legend.position = "bottom",
     legend.title=element_text())
     
-  # plot using the broadcasting dataframe, with day on the x axis, hour on the y axis, filled according to score
+  # plot using the broadcasting dataframe, with day on the x axis, hour on the y axis,
+  # filled according to score
   ggplot(broadcasting, aes(x = bc_day_num, y = bc_hour, fill = dh_score)) + 
     geom_tile(colour="black", size=0.5, stat="identity") + 
     scale_fill_viridis(name = "Anime Score") +
@@ -81,18 +83,18 @@ raw_df <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tid
     # group by just the day
     group_by(bc_day_num) %>%
     # count how many anime there are for each day, and calculate the mean score for each day
-    mutate(n_day = n(), day_score = mean(score)) %>%
+    summarise(n_day = n(), day_score = mean(score)) %>%
     ungroup()
   
   bcg <- broadcasting %>%
     # group by just the day
     group_by(bc_day_num) %>%
     # count how many anime there are for each day, and calculate the mean score for each day
-    summarise(n_day = n(), day_score = mean(score)) %>%
+    mutate(n_day = n(), day_score = mean(score)) %>%
     ungroup()
   
   # plot the days on the x axis and scores on the y axis
-  ggplot(bcg, aes(x = bc_day_num, y = day_score)) + ##, fill = n_day
+  ggplot(broadcasting2, aes(x = bc_day_num, y = day_score)) + ##, fill = n_day
     # add the columns for each day, use a minimal theme and the viridis colour palette (the best)
     geom_col() + scale_fill_viridis() + theme_minimal() %>%
     # label the plot and the axes
