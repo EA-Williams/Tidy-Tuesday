@@ -1,0 +1,93 @@
+---
+title: "Tidy Tuesday 2021-05-25 (Mario Kart)"
+author: "Emily Williams"
+date: "24/06/2021"
+output: html_document
+---
+
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Load relevant libraries
+library(tidytuesdayR)
+library(tidyverse)
+
+# Get the Data
+tuesdata <- tidytuesdayR::tt_load('2021-05-25')
+
+#Separate the Data
+records <- tuesdata$records
+drivers <- tuesdata$drivers
+rm(tuesdata)
+
+```
+
+## Mario Kart 64 World Records!
+
+My research question ideas:
+
+* What was the longest held record(s) and the shortest held records(s)? Separate out single and 3 lap (type).
+
+* Compare record times for pre- and post- a certain time period. Maybe the median?
+
+* **Added during:** Of records that got beat on the same day, how many seconds (and as a percentage) did the new record shave off?
+
+```{r longest_and_shortest_held_records}
+
+longest_held <- records %>%
+  group_by(type) %>%
+  filter(record_duration == max(record_duration)) %>%
+  ungroup()
+
+longest_held
+
+shortest_held <- records %>%
+  group_by(type) %>%
+  filter(record_duration == min(record_duration)) %>%
+  ungroup()
+
+shortest_held
+
+```
+
+So whilst there is only 1 unique longest-held number of days for each type, there are many entries for the shortest-held number of days for each type (0). These reflect records that were broken the same day.
+
+This is really interesting to me, so I'm going to now look at a new question:
+
+* Of records that got beat on the same day, how many seconds (and as a percentage) did the new record shave off?
+
+```{r same_day_new_records}
+
+# so I need to find the records in 'records' that superceded those in 'shortest_held', by matching track, type, shortcut and date
+
+# how do I do that?
+# I could do a join, then add an ending to the new column names
+# would have to remove the contents of shortest_held from records
+
+records_excluding <- records %>%
+  anti_join(shortest_held)
+  
+# done - now add columns to shortest_held that match track, type, shortcut and date from records
+
+# note, where there is NA in the new columns, the new record was also broken that same day
+# don't handle this for now
+
+same_day_breaks <- shortest_held %>%
+  left_join(records_excluding,
+            by = c("track", "type", "shortcut", "date"),
+            suffix = c("_original", "_new")) %>%
+  #make a new column for the number of seconds shaved off, and as a percentage
+  mutate(seconds_less = time_original - time_new,
+         seconds_less_perc = seconds_less / time_original)
+
+# plot this for each track, type and shortcut
+
+ggplot(data = same_day_breaks, aes(x = track, y = seconds_less_perc)) +
+  geom_bar(stat = "identity", fill = "blue") +
+  geom_text(aes(label = seconds_less_perc), vjust = 1.6, color = "black", size = 3.5)+
+  theme_minimal()
+
+# leave it there for now - have only separated by track
+
+```
+
